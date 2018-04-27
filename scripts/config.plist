@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>configuration</key>
+    <string>BUILD_MODE</string>
+    <key>workspace</key>
+    <string>PATH_TO_PROJECT</string>
+    <key>scheme</key>
+    <string>YOUR_SCHEME</string>
+    <key>version</key>
+    <string>YOUR_VERSION</string>
+</dict>
+</plist>
