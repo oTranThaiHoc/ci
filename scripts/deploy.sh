@@ -45,7 +45,7 @@ curl -F uploadfile=@"${BUILD_DIR}/${SCHEME}.${VERSION}.ipa" http://localhost:300
 if test $? -eq 0; then
     echo ""
     echo "** UPLOAD ${SCHEME}.${VERSION}.ipa SUCCEEDED **"
-    defaults write ${CONFIG_FILE} version ${VERSION}
+    # defaults write ${CONFIG_FILE} version ${VERSION}
 fi
 
 exit 0

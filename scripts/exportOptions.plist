@@ -3,17 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>method</key>
-	<string>enterprise</string>
+	<string>development</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>bundle_identifier</key>
-		<string>Provisioning name</string>
-		<key>signingCertificate</key>
-		<string>iOS Distribution</string>
-		<key>signingStyle</key>
-		<string>manual</string>
-		<key>teamID</key>
-		<string>Team id</string>
+		<key>com.access-company.ios.publus.oshiman</key>
+		<string>Mixi Dev</string>
 	</dict>
 </dict>
 </plist>
