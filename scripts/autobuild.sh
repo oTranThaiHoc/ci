@@ -162,7 +162,14 @@ function archive() {
     rm -rf ${PWD}/build/*
     PROVISIONING_PROFILE_NAME=`/usr/libexec/plistbuddy -c Print:Name /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
 
-    xcodebuild -workspace ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}";
+    case "${WORKSPACE}" in
+        *.xcworkspace)
+            xcodebuild -workspace ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}";
+        ;;
+        *.xcodeproj)
+            xcodebuild -project ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}";
+        ;;
+    esac
     if test $? -eq 0
         then
             echo "** ARCHIVE ${SCHEME} SUCCEEDED **"
