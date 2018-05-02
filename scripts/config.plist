@@ -3,11 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>configuration</key>
-    <string>Development</string>
+    <string>configuration</string>
     <key>workspace</key>
-    <string>/Users/nguyen.van.hung/Desktop/PhoneVerificationController-master/Example/Example.xcworkspace</string>
+    <string>path_to_work_space</string>
     <key>scheme</key>
-    <string>Example</string>
+    <string>scheme</string>
+    <key>mobileprovision</key>
+    <string>path_to_mobileprovision_file</string>
+    <key>p12</key>
+    <string>path_to_p12_file</string>
+    <key>exportmethod</key>
+    <string>export_method</string>
+    <key>bundleid</key>
+    <string>app_bundle_id</string>
     <key>version</key>
     <string>1.0.0</string>
 </dict>

@@ -1,32 +1,43 @@
 #!/bin/sh
 
 #  autobuild.sh
-#  
+#
 #
 #  Created by nguyen.van.hung on 4/19/18.
-#  
+#
 
 echo ""
-echo "Usage: autobuild.sh WORKSPACE SCHEME CONFIGURATION VERSION"
+echo "Usage: autobuild.sh CONFIG_FILE"
 echo ""
 echo ""
 
-WORKSPACE=$1
-SCHEME=$2
-CONFIGURATION=$3
-VERSION=$4
-BUILD_DIR=${PWD}/build
-PROVISIONING_PROFILE_FILE=Mixi_Dev.mobileprovision
-PROVISIONING_CERT=Certificates_En_Dev.p12
+CONFIG_FILE=$1
+
+if ! [ -f "$CONFIG_FILE" ]; then
+    echo "$CONFIG_FILE not found."
+    exit 1
+fi
+
+WORKSPACE=$(defaults read ${CONFIG_FILE} workspace)
+SCHEME=$(defaults read ${CONFIG_FILE} scheme)
+CONFIGURATION=$(defaults read ${CONFIG_FILE} configuration)
+PROVISIONING_PROFILE_FILE=$(defaults read ${CONFIG_FILE} mobileprovision)
+PROVISIONING_CERT=$(defaults read ${CONFIG_FILE} p12)
+EXPORT_METHOD=$(defaults read ${CONFIG_FILE} exportmethod)
+BUNDLEID=$(defaults read ${CONFIG_FILE} bundleid)
+VERSION=$(defaults read ${CONFIG_FILE} version)
+
 CERT_PASSWORD=""
 PROVISIONING_PROFILE_UUID=""
 TEMP_KEYCHAIN=$HOME/Library/Keychains/xcodebuild.keychain
-TEMP_KEYCHAIN_PASSWORD=12345678
-CODE_SIGN_IDENTITY="iPhone Developer: Hung Nguyen (C6DJV9RX9F)"
+TEMP_KEYCHAIN_PASSWORD=""
+CODE_SIGN_IDENTITY=""
+BUILD_DIR=${PWD}/build
 
 shopt -s extglob  # more powerful pattern matching
 
 function checkParameters() {
+    # check workspace
     if ! [ -n "${WORKSPACE##+([[:space:]])}" ]; then
         echo "You must provide WORKSPACE"
         exit 1
@@ -34,6 +45,7 @@ function checkParameters() {
         echo "Building workspace ${WORKSPACE}"
     fi
 
+    # check build scheme
     if ! [ -n "${SCHEME##+([[:space:]])}" ]; then
         echo "You must provide SCHEME"
         exit 1
@@ -41,11 +53,37 @@ function checkParameters() {
         echo "Building scheme ${SCHEME}"
     fi
 
+    # check build configuration
     if ! [ -n "${CONFIGURATION##+([[:space:]])}" ]; then
         CONFIGURATION='In-House'
         echo "Using default configuration ${CONFIGURATION}"
     fi
 
+    # check provisioning profile
+    if ! [ -n "${PROVISIONING_PROFILE_FILE##+([[:space:]])}" ]; then
+        echo "You must provide PROVISIONING_PROFILE_FILE"
+        exit 1
+    fi
+
+    # check certificate
+    if ! [ -n "${PROVISIONING_CERT##+([[:space:]])}" ]; then
+        echo "You must provide PROVISIONING_CERT"
+        exit 1
+    fi
+
+    # check export method
+    if ! [ -n "${EXPORT_METHOD##+([[:space:]])}" ]; then
+        echo "You must provide EXPORT_METHOD"
+        exit 1
+    fi
+
+    # check bundle_id
+    if ! [ -n "${BUNDLEID##+([[:space:]])}" ]; then
+        echo "You must provide BUNDLEID"
+        exit 1
+    fi
+
+    # check version, default 1.0.0
     if ! [ -n "${VERSION##+([[:space:]])}" ]; then
         VERSION='1.0.0'
         echo "Using default version ${VERSION}"
@@ -72,30 +110,30 @@ function getKeychainPassword() {
     esac
 }
 
-function deleteKeychain() {
+function cleanup() {
     echo "Delete keychain"
     security delete-keychain ${TEMP_KEYCHAIN}
     security list-keychains -s $HOME/Library/Keychains/login.keychain
     security default-keychain -s $HOME/Library/Keychains/login.keychain
+    echo "Delete exportOptions.plist"
+    rm -f exportOptions.plist
 }
 
 function importCertificate() {
-    security create-keychain -p "" ${TEMP_KEYCHAIN}
+    security create-keychain -p "${TEMP_KEYCHAIN_PASSWORD}" ${TEMP_KEYCHAIN}
     security add-certificates -k ${TEMP_KEYCHAIN}
     security list-keychains -s ${TEMP_KEYCHAIN}
     security default-keychain -s ${TEMP_KEYCHAIN}
-    security unlock-keychain -p "" ${TEMP_KEYCHAIN}
+    security unlock-keychain -p "${TEMP_KEYCHAIN_PASSWORD}" ${TEMP_KEYCHAIN}
     security import $PROVISIONING_CERT -P "$CERT_PASSWORD" -A -k ${TEMP_KEYCHAIN} -T /usr/bin/codesign -T /usr/bin/xcodebuild -T /usr/bin/security
     security set-keychain-settings -t 3000 ${TEMP_KEYCHAIN}
-    security set-key-partition-list -S apple-tool:,apple: -s -k "" ${TEMP_KEYCHAIN}
+    security set-key-partition-list -S apple-tool:,apple: -s -k "${TEMP_KEYCHAIN_PASSWORD}" ${TEMP_KEYCHAIN}
 
-    IOS_IDENTITY=$(security find-identity -v -p codesigning "${TEMP_KEYCHAIN}" | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//')
+    CODE_SIGN_IDENTITY=$(security find-identity -v -p codesigning "${TEMP_KEYCHAIN}" | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//')
     IOS_UUID=$(security find-identity -v -p codesigning "${TEMP_KEYCHAIN}" | head -1 | grep '"' | awk '{print $2}')
 
-    echo "iOS identity: " ${IOS_IDENTITY}
+    echo "iOS identity: " ${CODE_SIGN_IDENTITY}
     echo "iOS UUID: " ${IOS_UUID}
-
-    trap "deleteKeychain;" EXIT
     #
     # unlock the keychain, automatically lock keychain on script exit
     #
@@ -134,23 +172,37 @@ function archive() {
     fi
 }
 
-function buildIPA() {
+function createExportOptions() {
+    # create exportOptions
+    rm -f exportOptions.plist
     PROVISIONING_PROFILE_NAME=`/usr/libexec/plistbuddy -c Print:Name /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
+    ${PWD}/gen_export_options.sh "${EXPORT_METHOD}" "${BUNDLEID}" "${PROVISIONING_PROFILE_NAME}" "$1"
+}
+
+function buildIPA() {
+    createExportOptions exportOptions.plist;
 
     xcodebuild -exportArchive -archivePath ${PWD}/build/${SCHEME}.xcarchive -exportOptionsPlist exportOptions.plist -exportPath ${PWD}/build
 
     if test $? -eq 0
         then
             echo "** EXPORT ${SCHEME} SUCCEEDED **"
-            mv ${PWD}/build/${SCHEME}.ipa ${PWD}/build/${SCHEME}.${VERSION}.ipa 
+            mv ${PWD}/build/${SCHEME}.ipa ${PWD}/build/${SCHEME}.${VERSION}.ipa
         else
             echo "** EXPORT ${SCHEME} FAILED **"
             exit 1
     fi
+
+    rm -f exportOptions.plist
 }
 
+function cleanupTrap() {
+    trap "cleanup;" EXIT
+}
+
+cleanupTrap;
 checkParameters;
-getKeychainPassword;
+# getKeychainPassword;
 importCertificate;
 copyProvisioningProfile;
 archive;
