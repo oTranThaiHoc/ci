@@ -9,7 +9,8 @@
 EXPORT_METHOD=$1
 BUNDLEID=$2
 PROVISIONING_PROFILE_NAME=$3
-OPTIONS_FILE_NAME=$4
+DEVELOPMENT_TEAM=$4
+OPTIONS_FILE_NAME=$5
 
 cat > ${OPTIONS_FILE_NAME} <<- EOM
 <?xml version="1.0" encoding="UTF-8"?>
@@ -22,6 +23,8 @@ cat > ${OPTIONS_FILE_NAME} <<- EOM
     <dict>
         <key>${BUNDLEID}</key>
         <string>${PROVISIONING_PROFILE_NAME}</string>
+        <key>teamID</key>
+        <string>${DEVELOPMENT_TEAM}</string>
     </dict>
 </dict>
 </plist>

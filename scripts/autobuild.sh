@@ -32,6 +32,8 @@ PROVISIONING_PROFILE_UUID=""
 TEMP_KEYCHAIN=$HOME/Library/Keychains/xcodebuild.keychain
 TEMP_KEYCHAIN_PASSWORD=""
 CODE_SIGN_IDENTITY=""
+PROVISIONING_PROFILE_NAME=""
+DEVELOPMENT_TEAM=""
 BUILD_DIR=${PWD}/build
 
 shopt -s extglob  # more powerful pattern matching
@@ -154,20 +156,24 @@ function copyProvisioningProfile() {
     PROVISIONING_PROFILE_UUID=`/usr/libexec/plistbuddy -c Print:UUID /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
 }
 
+function findProfileInfo() {
+    PROVISIONING_PROFILE_NAME=`/usr/libexec/plistbuddy -c Print:Name /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
+    DEVELOPMENT_TEAM=`/usr/libexec/plistbuddy -c Print:TeamIdentifier:0 /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
+}
+
 function archive() {
     if [[ ! -e $BUILD_DIR ]]; then
         mkdir $BUILD_DIR
     fi
 
     rm -rf ${PWD}/build/*
-    PROVISIONING_PROFILE_NAME=`/usr/libexec/plistbuddy -c Print:Name /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
 
     case "${WORKSPACE}" in
         *.xcworkspace)
-            xcodebuild -workspace ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}";
+            xcodebuild -workspace ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
         ;;
         *.xcodeproj)
-            xcodebuild -project ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}";
+            xcodebuild -project ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
         ;;
     esac
     if test $? -eq 0
@@ -182,8 +188,7 @@ function archive() {
 function createExportOptions() {
     # create exportOptions
     rm -f exportOptions.plist
-    PROVISIONING_PROFILE_NAME=`/usr/libexec/plistbuddy -c Print:Name /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
-    ${PWD}/gen_export_options.sh "${EXPORT_METHOD}" "${BUNDLEID}" "${PROVISIONING_PROFILE_NAME}" "$1"
+    ${PWD}/gen_export_options.sh "${EXPORT_METHOD}" "${BUNDLEID}" "${PROVISIONING_PROFILE_NAME}" "${DEVELOPMENT_TEAM}" "$1"
 }
 
 function buildIPA() {
@@ -212,6 +217,7 @@ checkParameters;
 # getKeychainPassword;
 importCertificate;
 copyProvisioningProfile;
+findProfileInfo;
 archive;
 buildIPA;
 

@@ -3,4 +3,4 @@
 |Name|Values|
 |---|---|
 |configuration|Development, Production, In-House|
-|exportmethod|development, production|
+|exportmethod|development, enterprise, app-store, ad-hoc|
