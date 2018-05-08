@@ -34,7 +34,7 @@ TEMP_KEYCHAIN_PASSWORD=""
 CODE_SIGN_IDENTITY=""
 PROVISIONING_PROFILE_NAME=""
 DEVELOPMENT_TEAM=""
-BUILD_DIR=${PWD}/build
+BUILD_DIR=${PWD}/build_${SCHEME}
 
 shopt -s extglob  # more powerful pattern matching
 
@@ -166,14 +166,14 @@ function archive() {
         mkdir $BUILD_DIR
     fi
 
-    rm -rf ${PWD}/build/*
+    rm -rf $BUILD_DIR/*
 
     case "${WORKSPACE}" in
         *.xcworkspace)
-            xcodebuild -workspace ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
+            xcodebuild -workspace ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath $BUILD_DIR/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
         ;;
         *.xcodeproj)
-            xcodebuild -project ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath ${PWD}/build/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
+            xcodebuild -project ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath $BUILD_DIR/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
         ;;
     esac
     if test $? -eq 0
@@ -194,12 +194,12 @@ function createExportOptions() {
 function buildIPA() {
     createExportOptions exportOptions.plist;
 
-    xcodebuild -exportArchive -archivePath ${PWD}/build/${SCHEME}.xcarchive -exportOptionsPlist exportOptions.plist -exportPath ${PWD}/build
+    xcodebuild -exportArchive -archivePath $BUILD_DIR/${SCHEME}.xcarchive -exportOptionsPlist exportOptions.plist -exportPath $BUILD_DIR
 
     if test $? -eq 0
         then
             echo "** EXPORT ${SCHEME} SUCCEEDED **"
-            mv ${PWD}/build/${SCHEME}.ipa ${PWD}/build/${SCHEME}.${VERSION}.ipa
+            mv $BUILD_DIR/${SCHEME}.ipa $BUILD_DIR/${SCHEME}.${VERSION}.ipa
         else
             echo "** EXPORT ${SCHEME} FAILED **"
             exit 1

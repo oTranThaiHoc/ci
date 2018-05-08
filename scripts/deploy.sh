@@ -11,13 +11,15 @@ echo "Usage: deploy.sh"
 echo ""
 echo ""
 
-CONFIG_FILE=${PWD}/config.plist
-BUILD_DIR=${PWD}/build
+CONFIG_FILE=${PWD}/$1
 
-echo "Current version: ${VERSION}"
+# echo "Current version: ${VERSION}"
 # echo "Input new version: "
 # read VERSION
 # echo "New version: ${VERSION}"
+
+SCHEME=$(defaults read ${CONFIG_FILE} scheme)
+BUILD_DIR=${PWD}/build_${SCHEME}
 
 ${PWD}/autobuild.sh ${CONFIG_FILE}
 
