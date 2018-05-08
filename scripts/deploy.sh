@@ -19,6 +19,7 @@ CONFIG_FILE=${PWD}/$1
 # echo "New version: ${VERSION}"
 
 SCHEME=$(defaults read ${CONFIG_FILE} scheme)
+VERSION=$(defaults read ${CONFIG_FILE} version)
 BUILD_DIR=${PWD}/build_${SCHEME}
 
 ${PWD}/autobuild.sh ${CONFIG_FILE}
@@ -32,7 +33,7 @@ if test $? -eq 0
 fi
 
 echo "Uploading..."
-curl -F uploadfile=@"${BUILD_DIR}/${SCHEME}.${VERSION}.ipa" http://localhost:3000/upload
+curl -F uploadfile=@"${BUILD_DIR}/${SCHEME}.${VERSION}.ipa" https://df612ad4.ngrok.io/upload
 
 if test $? -eq 0; then
     echo ""
