@@ -3,20 +3,22 @@
 <plist version="1.0">
 <dict>
     <key>configuration</key>
-    <string>configuration</string>
+    <string>Development</string>
     <key>workspace</key>
-    <string>path_to_work_space</string>
+    <string>/Users/nguyen.van.hung/Desktop/Example/Example.xcodeproj</string>
     <key>scheme</key>
-    <string>scheme</string>
+    <string>Example</string>
     <key>mobileprovision</key>
-    <string>path_to_mobileprovision_file</string>
+    <string>/Users/nguyen.van.hung/Desktop/Example/Example.mobileprovision</string>
     <key>p12</key>
-    <string>path_to_p12_file</string>
+    <string>/Users/nguyen.van.hung/Desktop/Example/Example.p12</string>
     <key>exportmethod</key>
-    <string>export_method</string>
+    <string>ad-hoc</string>
     <key>bundleid</key>
-    <string>app_bundle_id</string>
+    <string>com.framgia.ios.example</string>
     <key>version</key>
     <string>1.0.0</string>
+    <key>server</key>
+    <string>http://192.168.5.29:4000</string>
 </dict>
 </plist>
