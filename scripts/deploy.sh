@@ -13,16 +13,14 @@ echo ""
 
 CONFIG_FILE=${PWD}/$1
 
-# echo "Current version: ${VERSION}"
-# echo "Input new version: "
-# read VERSION
-# echo "New version: ${VERSION}"
-
 SCHEME=$(defaults read ${CONFIG_FILE} scheme)
-VERSION=$(defaults read ${CONFIG_FILE} version)
+BUNDLEID=$(defaults read ${CONFIG_FILE} bundleid)
+SERVER=$(defaults read ${CONFIG_FILE} server)
 BUILD_DIR=${PWD}/build_${SCHEME}
+DATE=`date '+%Y%m%d.%H%M%S'`
+BINARY_FILE_NAME=${SCHEME}.${DATE}.ipa
 
-${PWD}/autobuild.sh ${CONFIG_FILE}
+${PWD}/autobuild.sh ${CONFIG_FILE} ${BINARY_FILE_NAME}
 
 if test $? -eq 0
     then
@@ -33,12 +31,11 @@ if test $? -eq 0
 fi
 
 echo "Uploading..."
-curl -F uploadfile=@"${BUILD_DIR}/${SCHEME}.${VERSION}.ipa" https://df612ad4.ngrok.io/upload
+curl -X POST -F uploadfile=@"${BUILD_DIR}/${BINARY_FILE_NAME}" --form bundleid="${BUNDLEID}" --form title="${SCHEME}.${DATE}" --form project="${SCHEME}" ${SERVER}/upload
 
 if test $? -eq 0; then
     echo ""
-    echo "** UPLOAD ${SCHEME}.${VERSION}.ipa SUCCEEDED **"
-    # defaults write ${CONFIG_FILE} version ${VERSION}
+    echo "** UPLOAD ${BINARY_FILE_NAME} SUCCEEDED **"
 fi
 
 exit 0

@@ -7,11 +7,12 @@
 #
 
 echo ""
-echo "Usage: autobuild.sh CONFIG_FILE"
+echo "Usage: autobuild.sh CONFIG_FILE IPA_FILE_NAME"
 echo ""
 echo ""
 
 CONFIG_FILE=$1
+IPA_FILE_NAME=$2
 
 if ! [ -f "$CONFIG_FILE" ]; then
     echo "$CONFIG_FILE not found."
@@ -25,7 +26,6 @@ PROVISIONING_PROFILE_FILE=$(defaults read ${CONFIG_FILE} mobileprovision)
 PROVISIONING_CERT=$(defaults read ${CONFIG_FILE} p12)
 EXPORT_METHOD=$(defaults read ${CONFIG_FILE} exportmethod)
 BUNDLEID=$(defaults read ${CONFIG_FILE} bundleid)
-VERSION=$(defaults read ${CONFIG_FILE} version)
 
 CERT_PASSWORD=""
 PROVISIONING_PROFILE_UUID=""
@@ -85,10 +85,10 @@ function checkParameters() {
         exit 1
     fi
 
-    # check version, default 1.0.0
-    if ! [ -n "${VERSION##+([[:space:]])}" ]; then
-        VERSION='1.0.0'
-        echo "Using default version ${VERSION}"
+    # check name, default ${SCHEME}.ipa
+    if ! [ -n "${IPA_FILE_NAME##+([[:space:]])}" ]; then
+        IPA_FILE_NAME=${SCHEME}.ipa
+        echo "Using default name ${IPA_FILE_NAME}"
     fi
 }
 
@@ -199,7 +199,10 @@ function buildIPA() {
     if test $? -eq 0
         then
             echo "** EXPORT ${SCHEME} SUCCEEDED **"
-            mv $BUILD_DIR/${SCHEME}.ipa $BUILD_DIR/${SCHEME}.${VERSION}.ipa
+            mv $BUILD_DIR/${SCHEME}.ipa $BUILD_DIR/${IPA_FILE_NAME}
+            rm -f $BUILD_DIR/app.plist
+            ${PWD}/gen_manifest.sh "${IPA_FILE_NAME}" "${BUNDLEID}" ${SCHEME}
+            mv app.plist $BUILD_DIR/app.plist
         else
             echo "** EXPORT ${SCHEME} FAILED **"
             exit 1
