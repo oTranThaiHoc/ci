@@ -200,9 +200,6 @@ function buildIPA() {
         then
             echo "** EXPORT ${SCHEME} SUCCEEDED **"
             mv $BUILD_DIR/${SCHEME}.ipa $BUILD_DIR/${IPA_FILE_NAME}
-            rm -f $BUILD_DIR/app.plist
-            ${PWD}/gen_manifest.sh "${IPA_FILE_NAME}" "${BUNDLEID}" ${SCHEME}
-            mv app.plist $BUILD_DIR/app.plist
         else
             echo "** EXPORT ${SCHEME} FAILED **"
             exit 1
