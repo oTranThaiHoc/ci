@@ -19,6 +19,8 @@ if ! [ -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
+SCRIPT_DIR="$( cd "$( echo "${BASH_SOURCE[0]%/*}" )"; pwd )"
+
 WORKSPACE=$(defaults read ${CONFIG_FILE} workspace)
 SCHEME=$(defaults read ${CONFIG_FILE} scheme)
 CONFIGURATION=$(defaults read ${CONFIG_FILE} configuration)
@@ -34,7 +36,7 @@ TEMP_KEYCHAIN_PASSWORD=""
 CODE_SIGN_IDENTITY=""
 PROVISIONING_PROFILE_NAME=""
 DEVELOPMENT_TEAM=""
-BUILD_DIR=${PWD}/build_${SCHEME}
+BUILD_DIR=${SCRIPT_DIR}/build_${SCHEME}
 
 shopt -s extglob  # more powerful pattern matching
 
@@ -188,7 +190,7 @@ function archive() {
 function createExportOptions() {
     # create exportOptions
     rm -f exportOptions.plist
-    ${PWD}/gen_export_options.sh "${EXPORT_METHOD}" "${BUNDLEID}" "${PROVISIONING_PROFILE_NAME}" "${DEVELOPMENT_TEAM}" "$1"
+    ${SCRIPT_DIR}/gen_export_options.sh "${EXPORT_METHOD}" "${BUNDLEID}" "${PROVISIONING_PROFILE_NAME}" "${DEVELOPMENT_TEAM}" "$1"
 }
 
 function buildIPA() {
