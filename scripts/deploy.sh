@@ -40,7 +40,7 @@ if test $? -eq 0
 fi
 
 echo "Uploading..."
-curl -X POST -F uploadfile=@"${BUILD_DIR}/${BINARY_FILE_NAME}" --form bundleid="${BUNDLEID}" --form title="${TITLE}" --form project="${SCHEME}" ${SERVER}/upload
+curl -X POST -F uploadfile=@"${BUILD_DIR}/${BINARY_FILE_NAME}" --form bundleid="${BUNDLEID}" --form title="${TITLE}" --form target="${SCHEME}" ${SERVER}/upload
 
 if test $? -eq 0; then
     echo ""
