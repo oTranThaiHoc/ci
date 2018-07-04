@@ -18,4 +18,4 @@ git add -A
 git checkout -f
 git pull access master
 
-${SCRIPT_DIR}/deploy.sh ${CONFIG_FILE} ${TITLE}
+${SCRIPT_DIR}/deploy_no_upload.sh ${CONFIG_FILE} ${TITLE}

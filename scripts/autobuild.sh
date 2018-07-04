@@ -28,6 +28,7 @@ PROVISIONING_PROFILE_FILE=$(defaults read ${CONFIG_FILE} mobileprovision)
 PROVISIONING_CERT=$(defaults read ${CONFIG_FILE} p12)
 EXPORT_METHOD=$(defaults read ${CONFIG_FILE} exportmethod)
 BUNDLEID=$(defaults read ${CONFIG_FILE} bundleid)
+PRESCRIPT=$(defaults read ${CONFIG_FILE} prescript)
 
 CERT_PASSWORD=""
 PROVISIONING_PROFILE_UUID=""
@@ -148,19 +149,26 @@ function importCertificate() {
 
 function copyProvisioningProfile() {
     #
-    # Copy the profile to the location XCode expects to find it and start the build,
-    # specifying which profile and signing identity to use for the archived app
-    #
-    cp -f ${PROVISIONING_PROFILE_FILE} "$HOME/Library/MobileDevice/Provisioning Profiles/$uuid.mobileprovision"
-    #
     # Extract the profile UUID from the checked in Provisioning Profile.
     #
     PROVISIONING_PROFILE_UUID=`/usr/libexec/plistbuddy -c Print:UUID /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
+    #
+    # Copy the profile to the location XCode expects to find it and start the build,
+    # specifying which profile and signing identity to use for the archived app
+    #
+    cp -f ${PROVISIONING_PROFILE_FILE} "$HOME/Library/MobileDevice/Provisioning Profiles/$PROVISIONING_PROFILE_UUID.mobileprovision"
 }
 
 function findProfileInfo() {
     PROVISIONING_PROFILE_NAME=`/usr/libexec/plistbuddy -c Print:Name /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
     DEVELOPMENT_TEAM=`/usr/libexec/plistbuddy -c Print:TeamIdentifier:0 /dev/stdin <<< \`security cms -D -i ${PROVISIONING_PROFILE_FILE}\``
+}
+
+function runPrescript() {
+    if [ -n "${PRESCRIPT##+([[:space:]])}" ]; then
+        echo "Run script " ${PRESCRIPT}
+        eval ${PRESCRIPT}
+    fi
 }
 
 function archive() {
@@ -220,6 +228,7 @@ checkParameters;
 importCertificate;
 copyProvisioningProfile;
 findProfileInfo;
+runPrescript;
 archive;
 buildIPA;
 
