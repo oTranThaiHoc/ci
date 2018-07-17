@@ -11,24 +11,24 @@ echo "Usage: autobuild.sh CONFIG_FILE IPA_FILE_NAME"
 echo ""
 echo ""
 
-CONFIG_FILE=$1
-IPA_FILE_NAME=$2
+CONFIG_FILE="$1"
+IPA_FILE_NAME="$2"
 
-if ! [ -f "$CONFIG_FILE" ]; then
-    echo "$CONFIG_FILE not found."
+if ! [ -f "${CONFIG_FILE}" ]; then
+    echo "${CONFIG_FILE} not found."
     exit 1
 fi
 
 SCRIPT_DIR="$( cd "$( echo "${BASH_SOURCE[0]%/*}" )"; pwd )"
 
-WORKSPACE=$(defaults read ${CONFIG_FILE} workspace)
-SCHEME=$(defaults read ${CONFIG_FILE} scheme)
-CONFIGURATION=$(defaults read ${CONFIG_FILE} configuration)
-PROVISIONING_PROFILE_FILE=$(defaults read ${CONFIG_FILE} mobileprovision)
-PROVISIONING_CERT=$(defaults read ${CONFIG_FILE} p12)
-EXPORT_METHOD=$(defaults read ${CONFIG_FILE} exportmethod)
-BUNDLEID=$(defaults read ${CONFIG_FILE} bundleid)
-PRESCRIPT=$(defaults read ${CONFIG_FILE} prescript)
+WORKSPACE=$(defaults read "${CONFIG_FILE}" workspace)
+SCHEME=$(defaults read "${CONFIG_FILE}" scheme)
+CONFIGURATION=$(defaults read "${CONFIG_FILE}" configuration)
+PROVISIONING_PROFILE_FILE=$(defaults read "${CONFIG_FILE}" mobileprovision)
+PROVISIONING_CERT=$(defaults read "${CONFIG_FILE}" p12)
+EXPORT_METHOD=$(defaults read "${CONFIG_FILE}" exportmethod)
+BUNDLEID=$(defaults read "${CONFIG_FILE}" bundleid)
+PRESCRIPT=$(defaults read "${CONFIG_FILE}" prescript)
 
 CERT_PASSWORD=""
 PROVISIONING_PROFILE_UUID=""
@@ -37,7 +37,7 @@ TEMP_KEYCHAIN_PASSWORD=""
 CODE_SIGN_IDENTITY=""
 PROVISIONING_PROFILE_NAME=""
 DEVELOPMENT_TEAM=""
-BUILD_DIR=${SCRIPT_DIR}/build_${SCHEME}
+BUILD_DIR=$(sed 's/ //g' <<< "${SCRIPT_DIR}/build_${SCHEME}")
 
 shopt -s extglob  # more powerful pattern matching
 
@@ -172,18 +172,18 @@ function runPrescript() {
 }
 
 function archive() {
-    if [[ ! -e $BUILD_DIR ]]; then
-        mkdir $BUILD_DIR
+    if [[ ! -e "$BUILD_DIR" ]]; then
+        mkdir "$BUILD_DIR"
     fi
 
-    rm -rf $BUILD_DIR/*
+    rm -rf "$BUILD_DIR"/*
 
     case "${WORKSPACE}" in
         *.xcworkspace)
-            xcodebuild -workspace ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath $BUILD_DIR/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
+            xcodebuild -workspace "${WORKSPACE}" -scheme "${SCHEME}" -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath "$BUILD_DIR/${SCHEME}.xcarchive" CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
         ;;
         *.xcodeproj)
-            xcodebuild -project ${WORKSPACE} -scheme ${SCHEME} -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath $BUILD_DIR/${SCHEME}.xcarchive CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
+            xcodebuild -project "${WORKSPACE}" -scheme "${SCHEME}" -sdk iphoneos -configuration ${CONFIGURATION} archive -archivePath "$BUILD_DIR/${SCHEME}.xcarchive" CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_NAME}" CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}";
         ;;
     esac
     if test $? -eq 0
@@ -204,12 +204,12 @@ function createExportOptions() {
 function buildIPA() {
     createExportOptions exportOptions.plist;
 
-    xcodebuild -exportArchive -archivePath $BUILD_DIR/${SCHEME}.xcarchive -exportOptionsPlist exportOptions.plist -exportPath $BUILD_DIR
+    xcodebuild -exportArchive -archivePath "$BUILD_DIR/${SCHEME}.xcarchive" -exportOptionsPlist exportOptions.plist -exportPath "$BUILD_DIR"
 
     if test $? -eq 0
         then
             echo "** EXPORT ${SCHEME} SUCCEEDED **"
-            mv $BUILD_DIR/${SCHEME}.ipa $BUILD_DIR/${IPA_FILE_NAME}
+            mv "$BUILD_DIR/${SCHEME}.ipa" "$BUILD_DIR/${IPA_FILE_NAME}"
         else
             echo "** EXPORT ${SCHEME} FAILED **"
             exit 1
