@@ -13,6 +13,7 @@ echo ""
 
 CONFIG_FILE="$1"
 IPA_FILE_NAME="$2"
+BUILD_VERSION="$3"
 
 if ! [ -f "${CONFIG_FILE}" ]; then
     echo "${CONFIG_FILE} not found."
@@ -22,6 +23,7 @@ fi
 SCRIPT_DIR="$( cd "$( echo "${BASH_SOURCE[0]%/*}" )"; pwd )"
 
 WORKSPACE=$(defaults read "${CONFIG_FILE}" workspace)
+INFOPLIST_PATH=$(defaults read "${CONFIG_FILE}" infoplist)
 SCHEME=$(defaults read "${CONFIG_FILE}" scheme)
 CONFIGURATION=$(defaults read "${CONFIG_FILE}" configuration)
 PROVISIONING_PROFILE_FILE=$(defaults read "${CONFIG_FILE}" mobileprovision)
@@ -171,6 +173,14 @@ function runPrescript() {
     fi
 }
 
+function updateVersion() {
+    if [ -n "${BUILD_VERSION##+([[:space:]])}" ]; then
+        if [ -n "${INFOPLIST_PATH##+([[:space:]])}" ]; then
+            defaults write "${INFOPLIST_PATH}" "CFBundleShortVersionString" "${BUILD_VERSION}"
+        fi  
+    fi
+}
+
 function archive() {
     if [[ ! -e "$BUILD_DIR" ]]; then
         mkdir "$BUILD_DIR"
@@ -229,6 +239,7 @@ importCertificate;
 copyProvisioningProfile;
 findProfileInfo;
 runPrescript;
+updateVersion;
 archive;
 buildIPA;
 

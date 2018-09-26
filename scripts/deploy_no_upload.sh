@@ -15,6 +15,7 @@ SCRIPT_DIR="$( cd "$( echo "${BASH_SOURCE[0]%/*}" )"; pwd )"
 
 CONFIG_FILE="${SCRIPT_DIR}/$1"
 TITLE="$2"
+BUILD_VERSION="$3"
 
 SCHEME="$(defaults read "${CONFIG_FILE}" scheme)"
 BUNDLEID=$(defaults read "${CONFIG_FILE}" bundleid)
@@ -29,7 +30,7 @@ if ! [ -n "${TITLE##+([[:space:]])}" ]; then
     echo "Using default title ${TITLE}"
 fi
 
-${SCRIPT_DIR}/autobuild.sh "${CONFIG_FILE}" "${BINARY_FILE_NAME}"
+${SCRIPT_DIR}/autobuild.sh "${CONFIG_FILE}" "${BINARY_FILE_NAME}" "${BUILD_VERSION}"
 
 if test $? -eq 0
     then
